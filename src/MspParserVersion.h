@@ -1,0 +1,7 @@
+#pragma once
+
+#define MSP_PARSER_MAJOR_VERSION 1
+#define MSP_PARSER_MINOR_VERSION 0
+#define MSP_PARSER_PATCH_VERSION 0
+
+#define MSP_PARSER_VERSION "1.0.0"
