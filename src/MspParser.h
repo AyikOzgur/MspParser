@@ -362,4 +362,6 @@ public:
 
 private:
 
+    uint8_t m_internalBuffer[1024]{0};
+
 };
