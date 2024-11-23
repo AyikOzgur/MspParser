@@ -1,7 +1,7 @@
 #include "MspParser.h"
 #include "MspParserVersion.h"
 
-uint8_t crc(uint8_t* data, size_t size)
+uint8_t MspParser::crc(uint8_t* data, size_t size)
 {
     uint8_t crc = 0;
     for (size_t i = 0; i < size; i++)

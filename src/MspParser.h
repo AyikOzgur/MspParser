@@ -364,4 +364,6 @@ private:
 
     uint8_t m_internalBuffer[64]{0};
 
+    uint8_t crc(uint8_t* data, size_t size);
+
 };
