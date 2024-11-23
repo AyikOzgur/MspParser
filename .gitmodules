@@ -1,0 +1,3 @@
+[submodule "test/3rdparty/SerialPort"]
+	path = test/3rdparty/SerialPort
+	url = https://github.com/ConstantRobotics-Ltd/SerialPort.git

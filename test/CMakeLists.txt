@@ -44,6 +44,7 @@ endif()
 ## linking all dependencies
 ################################################################################
 target_link_libraries (${PROJECT_NAME} MspParser)
+target_link_libraries (${PROJECT_NAME} SerialPort)
 
 
 
@@ -51,3 +52,5 @@ target_link_libraries (${PROJECT_NAME} MspParser)
 ## ADDITIONAL SETTINGS
 ## additional options and project settings
 ################################################################################
+
+add_subdirectory(3rdparty)
