@@ -1,24 +1,6 @@
 #include "MspParser.h"
 #include "MspParserVersion.h"
 
-uint8_t MspParser::crc(uint8_t* data, size_t size)
-{
-    uint8_t crc = 0;
-    for (size_t i = 0; i < size; i++)
-    {
-        crc ^= data[i];
-    }
-    return crc;
-}
-
-MspParser::MspParser()
-{
-}
-
-MspParser::~MspParser()
-{
-}
-
 std::string MspParser::getVersion()
 {
     return MSP_PARSER_VERSION;
@@ -105,6 +87,7 @@ bool MspParser::encode(uint8_t* data, size_t& size, MspCommand command, std::vec
     return true;
 }
 
+
 bool MspParser::decode(uint8_t nextByte, MspCommand& command, std::vector<float>& arguments)
 {
     // Shift internal buffer
@@ -150,6 +133,17 @@ bool MspParser::decode(uint8_t nextByte, MspCommand& command, std::vector<float>
         arguments.push_back(altitude);
         break;
     }
+    case MspCommand::MSP_ANALOG:
+    {
+        command = MspCommand::MSP_ANALOG;
+        float vbat = static_cast<int16_t>(m_internalBuffer[5] ) / 10.0f;
+        float powerMeterSum = static_cast<int16_t>(m_internalBuffer[6] | (m_internalBuffer[7] << 8));
+        float rssi = static_cast<int16_t>(m_internalBuffer[8] | (m_internalBuffer[9] << 8));
+        arguments.push_back(vbat);
+        arguments.push_back(powerMeterSum);
+        arguments.push_back(rssi);
+        break;
+    }
     default:
     {
         // Rest of commands will be implemented in the future.
@@ -158,4 +152,14 @@ bool MspParser::decode(uint8_t nextByte, MspCommand& command, std::vector<float>
     }
 
     return true;
+}
+
+uint8_t MspParser::crc(uint8_t* data, size_t size)
+{
+    uint8_t crc = 0;
+    for (size_t i = 0; i < size; i++)
+    {
+        crc ^= data[i];
+    }
+    return crc;
 }

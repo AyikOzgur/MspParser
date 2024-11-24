@@ -10,17 +10,29 @@ int main()
 
     MspParser mspParser;
 
-    std::string serialPortName;
-    std::cout << "Enter serial port name (/dev/ttyUSB0 for linux , COM1 for windows): ";
-    std::cin >> serialPortName;
+    std::string serialPortName = "COM7";
+    int baudrate = 115200;
+
+    std::cout << "Default serial port: " << serialPortName << std::endl;
+    std::cout << "Default baudrate: " << baudrate << std::endl;
+
+    int useDefault;
+    std::cout << "Use default serial port settings? (1 - yes, 0 - no): ";
+    std::cin >> useDefault;
+
+    if (useDefault == 0)
+    {
+
+        std::cout << "Enter serial port name (/dev/ttyUSB0 for linux , COM1 for windows): ";
+        std::cin >> serialPortName;
 
 #if defined(_WIN32)
-    serialPortName = "\\\\.\\" + serialPortName;
+        serialPortName = "\\\\.\\" + serialPortName;
 #endif
 
-    int baudrate;
-    std::cout << "Enter baudrate: ";
-    std::cin >> baudrate;
+        std::cout << "Enter baudrate: ";
+        std::cin >> baudrate;
+    }
 
     cr::clib::SerialPort serialPort;
     if (!serialPort.open(serialPortName.c_str(), baudrate, 0))
@@ -42,6 +54,7 @@ int main()
         std::cout << "-1 Exit" << std::endl;
         std::cout << static_cast<int>(MspCommand::MSP_ATTITUDE) << "  Get angles." << std::endl;
         std::cout << static_cast<int>(MspCommand::MSP_ALTITUDE) << "  Get altitude" << std::endl;
+        std::cout << static_cast<int>(MspCommand::MSP_ANALOG) << "  Get analog" << std::endl;
         std::cout << static_cast<int>(MspCommand::MSP_SET_RAW_RC) << "  Set RC chanlles" << std::endl;
         
         int option;
@@ -81,6 +94,7 @@ int main()
         }
 
         int bytes = serialPort.read(bufferRead, sizeof(bufferRead));
+        std::cout << "Bytes read: " << bytes << std::endl;
         for (int i = 0; i < bytes; i++)
         {
             MspCommand command;
@@ -94,6 +108,10 @@ int main()
                 else if (command == MspCommand::MSP_ALTITUDE)
                 {
                     std::cout << "ALTITUDE: " << arguments[0] << std::endl;
+                }
+                else if (command == MspCommand::MSP_ANALOG)
+                {
+                    std::cout << "BATTERY: " << arguments[0] << std::endl;
                 }
             }
         }

@@ -350,10 +350,6 @@ class MspParser
 {
 public:
 
-    MspParser();
-
-    ~MspParser();
-
     static std::string getVersion();
 
     bool encode(uint8_t* data, size_t& size, MspCommand command, std::vector<int32_t> arguments = {});
@@ -362,8 +358,7 @@ public:
 
 private:
 
-    uint8_t m_internalBuffer[64]{0};
+    uint8_t m_internalBuffer[32]{0};
 
     uint8_t crc(uint8_t* data, size_t size);
-
 };
