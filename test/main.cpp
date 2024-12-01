@@ -56,11 +56,12 @@ int main()
         std::cout << static_cast<int>(MspCommand::MSP_ALTITUDE) << "  Get altitude" << std::endl;
         std::cout << static_cast<int>(MspCommand::MSP_ANALOG) << "  Get analog" << std::endl;
         std::cout << static_cast<int>(MspCommand::MSP_SET_RAW_RC) << "  Set RC chanlles" << std::endl;
-        
+        std::cout << static_cast<int>(MspCommand::MSP_RAW_IMU) << "  Get raw IMU" << std::endl;
+        std::cout << static_cast<int>(MspCommand::MSP_MODE_RANGES) << "  Get mode ranges" << std::endl;
+        std::cout << "---------------------------------" << std::endl;
         int option;
         std::cout << "Select option: ";
         std::cin >> option;
-
         if (option == -1)
         {
             return 0;
@@ -68,7 +69,7 @@ int main()
 
         MspCommand command = static_cast<MspCommand>(option);
 
-        std::vector<int32_t> arguments;
+        std::vector<uint16_t> arguments;
         if (command == MspCommand::MSP_SET_RAW_RC)
         {
             for (int i = 0; i < 8; i++)
@@ -94,24 +95,45 @@ int main()
         }
 
         int bytes = serialPort.read(bufferRead, sizeof(bufferRead));
-        std::cout << "Bytes read: " << bytes << std::endl;
-        for (int i = 0; i < bytes; i++)
+
+        if (command == MspCommand::MSP_MODE_RANGES)
         {
-            MspCommand command;
-            std::vector<float> arguments;
-            if (mspParser.decode(bufferRead[i], command, arguments))
+            MspModes modes;
+            for (int i = 0; i < bytes; i++)
             {
-                if (command == MspCommand::MSP_ATTITUDE)
+                if (mspParser.decodeModes(bufferRead[i], modes))
                 {
-                    std::cout << "ATTITUDE: " << arguments[0] << " " << arguments[1] << " " << arguments[2] << std::endl;
+                    std::cout << "Arm mode channel: " << modes.arm.auxChannel << " Range start: " << modes.arm.rangeStart << " Range end: " << modes.arm.rangeEnd << std::endl;
+                    std::cout << "Angle mode channel: " << modes.angle.auxChannel << " Range start: " << modes.angle.rangeStart << " Range end: " << modes.angle.rangeEnd << std::endl;
+                    std::cout << "Horizon mode channel: " << modes.horizon.auxChannel << " Range start: " << modes.horizon.rangeStart << " Range end: " << modes.horizon.rangeEnd << std::endl;
+                    break;
                 }
-                else if (command == MspCommand::MSP_ALTITUDE)
+            }
+        }
+        else
+        {
+            for (int i = 0; i < bytes; i++)
+            {
+                MspCommand command;
+                std::vector<float> arguments;
+                if (mspParser.decode(bufferRead[i], command, arguments))
                 {
-                    std::cout << "ALTITUDE: " << arguments[0] << std::endl;
-                }
-                else if (command == MspCommand::MSP_ANALOG)
-                {
-                    std::cout << "BATTERY: " << arguments[0] << std::endl;
+                    if (command == MspCommand::MSP_ATTITUDE)
+                    {
+                        std::cout << "ATTITUDE: " << arguments[0] << " " << arguments[1] << " " << arguments[2] << std::endl;
+                    }
+                    else if (command == MspCommand::MSP_ALTITUDE)
+                    {
+                        std::cout << "ALTITUDE: " << arguments[0] << std::endl;
+                    }
+                    else if (command == MspCommand::MSP_ANALOG)
+                    {
+                        std::cout << "BATTERY: " << arguments[0] << std::endl;
+                    }
+                    else if (command == MspCommand::MSP_RAW_IMU)
+                    {
+                        std::cout << "Ax: " << arguments[0] << " Ay: " << arguments[1] << " Az: " << arguments[2] << std::endl;
+                    }
                 }
             }
         }

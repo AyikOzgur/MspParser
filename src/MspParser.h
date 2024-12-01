@@ -340,8 +340,129 @@ enum class MspCommand
      * @param No arguments
      */
     MSP_EEPROM_WRITE = 250,
+
+    /**
+     * @brief MSP_MODE_RANGES request
+     * @param No arguments
+     */
+    MSP_MODE_RANGES = 34
 };
 
+
+/**
+ * @brief MspMode ID
+ */
+enum class MSP_MODE_ID
+{
+    NONE = -1,
+    ARM,
+    ANGLE,
+    HORIZON,
+    ANTI_GRAVITY = 4,
+    MAG,
+    HEADFREE,
+    HEADADJ,
+    CAMSTAB,
+    PASSTHRU = 12,
+    BEEPERON,
+    LEDLOW = 15,
+    CALIB = 17,
+    OSD = 19,
+    TELEMETRY,
+    SERVO_1 = 23,
+    SERVO_2,
+    SERVO_3,
+    BLACKBOX,
+    FAILSAFE,
+    AIRMODE,
+    D3, // IT IS 3D
+    FPV_ANGLE_MIX,
+    BLACKBOX_ERASE,
+    CAMERA_CONTROL_1,
+    CAMERA_CONTROL_2,
+    CAMERA_CONTROL_3,
+    FLIB_OVER_AFTER_CRASH,
+    BOX_PREARM,
+    BEEP_GPS_SATELLITE_COUNT,
+    VTX_PIT_MODE = 39,
+    USER_1,
+    USER_2,
+    USER_3,
+    USER_4,
+    PID_AUDIO,
+    PARALYZE,
+    GPS_RESCUE,
+    ACRO_TRAINER,
+    DISABLE_VTX_CONTROL,
+    LAUNCH_CONTROL,
+    MSP_OVERRIDE,
+    STICK_COMMANDS_DISABLE,
+    BEEPER_MUTE,
+    READY,
+    LAP_TIMER_RESET
+};
+
+struct MspMode
+{
+    MspMode (MSP_MODE_ID _id) : id(_id) {}
+    /// @brief Mode ID
+    MSP_MODE_ID id{MSP_MODE_ID::NONE};
+    /// @brief Aux channel index
+    int auxChannel{-1};
+    /// @brief Range start
+    int rangeStart{-1};
+    /// @brief Range end
+    int rangeEnd{-1};
+};
+
+struct MspModes
+{
+    MspMode arm{MSP_MODE_ID::ARM};
+    MspMode angle{MSP_MODE_ID::ANGLE};
+    MspMode horizon{MSP_MODE_ID::HORIZON};
+    MspMode antiGravity{MSP_MODE_ID::ANTI_GRAVITY};
+    MspMode mag{MSP_MODE_ID::MAG};
+    MspMode headFree{MSP_MODE_ID::HEADFREE};
+    MspMode headAdj{MSP_MODE_ID::HEADADJ};
+    MspMode camstab{MSP_MODE_ID::CAMSTAB};
+    MspMode passthru{MSP_MODE_ID::PASSTHRU};
+    MspMode beeperOn{MSP_MODE_ID::BEEPERON};
+    MspMode ledLow{MSP_MODE_ID::LEDLOW};
+    MspMode calib{MSP_MODE_ID::CALIB};
+    MspMode osd{MSP_MODE_ID::OSD};
+    MspMode telemetry{MSP_MODE_ID::TELEMETRY};
+    MspMode servo1{MSP_MODE_ID::SERVO_1};
+    MspMode servo2{MSP_MODE_ID::SERVO_2};
+    MspMode servo3{MSP_MODE_ID::SERVO_3};
+    MspMode blackbox{MSP_MODE_ID::BLACKBOX};
+    MspMode failsafe{MSP_MODE_ID::FAILSAFE};
+    MspMode airmode{MSP_MODE_ID::AIRMODE};
+    MspMode d3{MSP_MODE_ID::D3};
+    MspMode fpvAngleMix{MSP_MODE_ID::FPV_ANGLE_MIX};
+    MspMode blackboxErase{MSP_MODE_ID::BLACKBOX_ERASE};
+    MspMode cameraControl1{MSP_MODE_ID::CAMERA_CONTROL_1};
+    MspMode cameraControl2{MSP_MODE_ID::CAMERA_CONTROL_2};
+    MspMode cameraControl3{MSP_MODE_ID::CAMERA_CONTROL_3};
+    MspMode flibOverAfterCrash{MSP_MODE_ID::FLIB_OVER_AFTER_CRASH};
+    MspMode boxPrearm{MSP_MODE_ID::BOX_PREARM};
+    MspMode beepGpsSatelliteCount{MSP_MODE_ID::BEEP_GPS_SATELLITE_COUNT};
+    MspMode vtxPitMode{MSP_MODE_ID::VTX_PIT_MODE};
+    MspMode user1{MSP_MODE_ID::USER_1};
+    MspMode user2{MSP_MODE_ID::USER_2};
+    MspMode user3{MSP_MODE_ID::USER_3};
+    MspMode user4{MSP_MODE_ID::USER_4};
+    MspMode pidAudio{MSP_MODE_ID::PID_AUDIO};
+    MspMode paralyze{MSP_MODE_ID::PARALYZE};
+    MspMode gpsRescue{MSP_MODE_ID::GPS_RESCUE};
+    MspMode acroTrainer{MSP_MODE_ID::ACRO_TRAINER};
+    MspMode disableVtxControl{MSP_MODE_ID::DISABLE_VTX_CONTROL};
+    MspMode launchControl{MSP_MODE_ID::LAUNCH_CONTROL};
+    MspMode mspOverride{MSP_MODE_ID::MSP_OVERRIDE};
+    MspMode stickCommandsDisable{MSP_MODE_ID::STICK_COMMANDS_DISABLE};
+    MspMode beeperMute{MSP_MODE_ID::BEEPER_MUTE};
+    MspMode ready{MSP_MODE_ID::READY};
+    MspMode lapTimerReset{MSP_MODE_ID::LAP_TIMER_RESET};
+};
 
 /**
  * @brief MspParser class
@@ -356,9 +477,12 @@ public:
 
     bool decode(uint8_t nextByte, MspCommand& command, std::vector<float>& arguments);
 
+    bool decodeModes(uint8_t nextByte, MspModes& modes);
+
 private:
 
     uint8_t m_internalBuffer[32]{0};
+    uint8_t m_internalBufferModes[160]{0};
 
     uint8_t crc(uint8_t* data, size_t size);
 };

@@ -1,3 +1,4 @@
+#include <cstring>
 #include "MspParser.h"
 #include "MspParserVersion.h"
 
@@ -38,6 +39,7 @@ bool MspParser::encode(uint8_t* data, size_t& size, MspCommand command, std::vec
     case MspCommand::MSP_MAG_CALIBRATION: [[fallthrough]];
     case MspCommand::MSP_RESET_CONF: [[fallthrough]];
     case MspCommand::MSP_BIND: [[fallthrough]];
+    case MspCommand::MSP_MODE_RANGES: [[fallthrough]];
     case MspCommand::MSP_EEPROM_WRITE:
     {
         data[0] = '$';
@@ -174,10 +176,78 @@ bool MspParser::decode(uint8_t nextByte, MspCommand& command, std::vector<float>
     }
 
     // Clear internal buffer
-    for (size_t i = 0; i < sizeof(m_internalBuffer); i++)
+    memset(m_internalBuffer, 0, sizeof(m_internalBuffer));
+
+    return true;
+}
+
+bool MspParser::decodeModes(uint8_t nextByte, MspModes& modes)
+{
+    // Shift internal buffer
+    for (size_t i = 0; i < sizeof(m_internalBufferModes) - 1; i++)
     {
-        m_internalBuffer[i] = 0;
+        m_internalBufferModes[i] = m_internalBufferModes[i + 1];
     }
+
+    // Add new byte to internal buffer
+    m_internalBufferModes[sizeof(m_internalBufferModes) - 1] = nextByte;
+
+    // Check if we have a valid attitude response
+    if (m_internalBufferModes[0] != '$' || m_internalBufferModes[1] != 'M' || m_internalBufferModes[2] != '>')
+    {
+        return false;
+    }
+
+    int size = m_internalBufferModes[3];
+    uint8_t crcReceived = m_internalBufferModes[5 + size];
+    uint8_t crcCalculated = crc(m_internalBufferModes + 3, size + 2);
+    if (crcReceived != crcCalculated)
+    {
+        return false;
+    }
+
+    if (static_cast<MspCommand>(m_internalBufferModes[4]) != MspCommand::MSP_MODE_RANGES)
+    {
+        return false;
+    }
+
+    // Modes are stored in the buffer from byte 5 to byte 5 + size
+    // byte [0] = id
+    // byte [1] = aux channel (from 0 index)
+    // byte [2] = range start (900 + 25 * value)
+    // byte [3] = range end (900 + 25 * value)
+
+    // We need this flag because all other unused modes are set to 0 id like arm mode
+    bool isArmFound = false;
+
+    for (int i = 5; i < 5 + size; i += 4)
+    {
+        MSP_MODE_ID id = static_cast<MSP_MODE_ID>(m_internalBufferModes[i]);
+
+        MspMode *mode = &modes.angle;
+        for (int j = 0; j < sizeof(modes) / sizeof(MspMode); j++)
+        {
+            if (id == MSP_MODE_ID::ARM && !isArmFound)
+            {
+                // Arm mode is the first mode in the buffer
+                modes.arm.auxChannel = ++m_internalBufferModes[i + 1];
+                modes.arm.rangeStart = m_internalBufferModes[i + 2] * 25 + 900;
+                modes.arm.rangeEnd = m_internalBufferModes[i + 3] * 25 + 900;
+                isArmFound = true;
+            }
+            else if (mode->id == id && id != MSP_MODE_ID::ARM)
+            {
+                mode->auxChannel = ++m_internalBufferModes[i + 1];
+                mode->rangeStart = m_internalBufferModes[i + 2] * 25 + 900;
+                mode->rangeEnd = m_internalBufferModes[i + 3] * 25 + 900;
+                break;
+            }
+            mode++;
+        }
+    }
+
+    // Clear internal buffer
+    memset(m_internalBufferModes, 0, sizeof(m_internalBufferModes));
 
     return true;
 }
