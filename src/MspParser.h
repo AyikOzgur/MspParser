@@ -352,7 +352,7 @@ public:
 
     static std::string getVersion();
 
-    bool encode(uint8_t* data, size_t& size, MspCommand command, std::vector<int32_t> arguments = {});
+    bool encode(uint8_t* data, size_t& size, MspCommand command, std::vector<uint16_t> arguments = {});
 
     bool decode(uint8_t nextByte, MspCommand& command, std::vector<float>& arguments);
 

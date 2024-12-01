@@ -6,7 +6,7 @@ std::string MspParser::getVersion()
     return MSP_PARSER_VERSION;
 }
 
-bool MspParser::encode(uint8_t* data, size_t& size, MspCommand command, std::vector<int32_t> arguments)
+bool MspParser::encode(uint8_t* data, size_t& size, MspCommand command, std::vector<uint16_t> arguments)
 {
 
     size = 0;
@@ -60,14 +60,14 @@ bool MspParser::encode(uint8_t* data, size_t& size, MspCommand command, std::vec
         data[1] = 'M';
         data[2] = '<'; // Because it is setting
 
-        size = 32; // 16 arguments * 2 bytes
+        size = 16; // 16 arguments * 2 bytes
         data[3] = size;
 
         data[4] = static_cast<uint8_t>(command);
 
-        for (size_t i = 0; i < 16; i++)
+        for (size_t i = 0; i < 8; i++)
         {
-            int16_t value = arguments[i];
+            uint16_t value = arguments[i];
             data[5 + i * 2] = value & 0xFF;
             data[6 + i * 2] = (value >> 8) & 0xFF;
         }
@@ -86,7 +86,6 @@ bool MspParser::encode(uint8_t* data, size_t& size, MspCommand command, std::vec
 
     return true;
 }
-
 
 bool MspParser::decode(uint8_t nextByte, MspCommand& command, std::vector<float>& arguments)
 {
@@ -118,11 +117,11 @@ bool MspParser::decode(uint8_t nextByte, MspCommand& command, std::vector<float>
     case MspCommand::MSP_ATTITUDE:
     {
         command = MspCommand::MSP_ATTITUDE;
-        float pitch = static_cast<int16_t>(m_internalBuffer[5] | (m_internalBuffer[6] << 8)) / 10.0f;
-        float roll = static_cast<int16_t>(m_internalBuffer[7] | (m_internalBuffer[8] << 8)) / 10.0f;
-        float yaw = static_cast<int16_t>(m_internalBuffer[9] | (m_internalBuffer[10] << 8)) / 10.0f;
-        arguments.push_back(pitch);
+        float roll = static_cast<int16_t>(m_internalBuffer[5] | (m_internalBuffer[6] << 8)) / 10.0f;
+        float pitch = static_cast<int16_t>(m_internalBuffer[7] | (m_internalBuffer[8] << 8)) / 10.0f;
+        float yaw = static_cast<int16_t>(m_internalBuffer[9] | (m_internalBuffer[10] << 8)) ;
         arguments.push_back(roll);
+        arguments.push_back(pitch);
         arguments.push_back(yaw);
         break;
     }
@@ -144,11 +143,40 @@ bool MspParser::decode(uint8_t nextByte, MspCommand& command, std::vector<float>
         arguments.push_back(rssi);
         break;
     }
+    case MspCommand::MSP_RAW_IMU:
+    {
+        command = MspCommand::MSP_RAW_IMU;
+        float accx = static_cast<int16_t>(m_internalBuffer[5] | (m_internalBuffer[6] << 8));
+        float accy = static_cast<int16_t>(m_internalBuffer[7] | (m_internalBuffer[8] << 8));
+        float accz = static_cast<int16_t>(m_internalBuffer[9] | (m_internalBuffer[10] << 8));
+        float gyrx = static_cast<int16_t>(m_internalBuffer[11] | (m_internalBuffer[12] << 8));
+        float gyry = static_cast<int16_t>(m_internalBuffer[13] | (m_internalBuffer[14] << 8));
+        float gyrz = static_cast<int16_t>(m_internalBuffer[15] | (m_internalBuffer[16] << 8));
+        float magx = static_cast<int16_t>(m_internalBuffer[17] | (m_internalBuffer[18] << 8));
+        float magy = static_cast<int16_t>(m_internalBuffer[19] | (m_internalBuffer[20] << 8));
+        float magz = static_cast<int16_t>(m_internalBuffer[21] | (m_internalBuffer[22] << 8));
+        arguments.push_back(accx / 512); // In g unit for mpu6050.
+        arguments.push_back(accy / 512); // In g unit for mpu6050.
+        arguments.push_back(accz / 512); // In g unit for mpu6050.
+        arguments.push_back(gyrx);
+        arguments.push_back(gyry);
+        arguments.push_back(gyrz);
+        arguments.push_back(magx);
+        arguments.push_back(magy);
+        arguments.push_back(magz);
+        break;
+    }
     default:
     {
         // Rest of commands will be implemented in the future.
         return false;
     }
+    }
+
+    // Clear internal buffer
+    for (size_t i = 0; i < sizeof(m_internalBuffer); i++)
+    {
+        m_internalBuffer[i] = 0;
     }
 
     return true;
