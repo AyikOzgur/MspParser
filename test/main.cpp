@@ -106,6 +106,7 @@ int main()
                     std::cout << "Arm mode channel: " << modes.arm.auxChannel << " Range start: " << modes.arm.rangeStart << " Range end: " << modes.arm.rangeEnd << std::endl;
                     std::cout << "Angle mode channel: " << modes.angle.auxChannel << " Range start: " << modes.angle.rangeStart << " Range end: " << modes.angle.rangeEnd << std::endl;
                     std::cout << "Horizon mode channel: " << modes.horizon.auxChannel << " Range start: " << modes.horizon.rangeStart << " Range end: " << modes.horizon.rangeEnd << std::endl;
+                    std::cout << "Msp_override mode channel: " << modes.mspOverride.auxChannel << " Range start: " << modes.mspOverride.rangeStart << " Range end: " << modes.mspOverride.rangeEnd << std::endl;
                     break;
                 }
             }
