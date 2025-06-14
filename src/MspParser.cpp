@@ -79,6 +79,24 @@ bool MspParser::encode(uint8_t* data, size_t& size, MspCommand command, std::vec
         size += 6; // Final buffer size
         break;
     }
+    case MspCommand::MSP_SET_RECTANGLE_POS:
+    {
+        data[0] = '$';
+        data[1] = 'M';
+        data[2] = '<';
+
+        size = 2;
+        data[3] = size;
+
+        data[4] = static_cast<uint8_t>(command);
+        data[5] = arguments[0];
+        data[6] = arguments[1];
+
+        data[size + 5] = crc(data + 3, 2 + size);
+
+        size += 6; // Final buffer size
+        break;
+    }
     default:
     {
         // Rest of commands will be implemented in the future.

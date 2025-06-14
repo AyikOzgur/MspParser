@@ -345,7 +345,9 @@ enum class MspCommand
      * @brief MSP_MODE_RANGES request
      * @param No arguments
      */
-    MSP_MODE_RANGES = 34
+    MSP_MODE_RANGES = 34,
+
+    MSP_SET_RECTANGLE_POS = 190
 };
 
 
