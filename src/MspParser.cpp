@@ -82,7 +82,7 @@ bool MspParser::encode(uint8_t* data, size_t& size, MspCommand command, std::vec
     }
 
     data[size + 5] = crc(data + 3, 2 + size);
-    size += 6; // Final buffer size
+    size += 6; // Final buffer size to write to serial port.
 
     return true;
 }
