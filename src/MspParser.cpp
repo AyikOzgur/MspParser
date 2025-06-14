@@ -45,7 +45,7 @@ bool MspParser::encode(uint8_t* data, size_t& size, MspCommand command, std::vec
     case MspCommand::MSP_MODE_RANGES: [[fallthrough]];
     case MspCommand::MSP_EEPROM_WRITE:
     {
-        data[3] = size;
+        data[3] = static_cast<uint8_t>(size);
         data[4] = static_cast<uint8_t>(command);
         break;
     }
@@ -53,7 +53,7 @@ bool MspParser::encode(uint8_t* data, size_t& size, MspCommand command, std::vec
     case MspCommand::MSP_SET_RAW_RC:
     {
         size = 16; // 8 arguments * 2 bytes
-        data[3] = size;
+        data[3] = static_cast<uint8_t>(size);
         data[4] = static_cast<uint8_t>(command);
 
         for (size_t i = 0; i < 8; i++)
@@ -67,11 +67,11 @@ bool MspParser::encode(uint8_t* data, size_t& size, MspCommand command, std::vec
     case MspCommand::MSP_SET_RECTANGLE_POS:
     {
         size = 2;
-        data[3] = size;
+        data[3] = static_cast<uint8_t>(size);
 
         data[4] = static_cast<uint8_t>(command);
-        data[5] = arguments[0];
-        data[6] = arguments[1];
+        data[5] = static_cast<uint8_t>(arguments[0]);
+        data[6] = static_cast<uint8_t>(arguments[1]);
         break;
     }
     default:
