@@ -11,6 +11,9 @@ bool MspParser::encode(uint8_t* data, size_t& size, MspCommand command, std::vec
 {
 
     size = 0;
+    data[0] = '$';
+    data[1] = 'M';
+    data[2] = '<';
 
     switch (command)
     {
@@ -42,29 +45,15 @@ bool MspParser::encode(uint8_t* data, size_t& size, MspCommand command, std::vec
     case MspCommand::MSP_MODE_RANGES: [[fallthrough]];
     case MspCommand::MSP_EEPROM_WRITE:
     {
-        data[0] = '$';
-        data[1] = 'M';
-        data[2] = '<'; // Because it is a request
-
         data[3] = size;
-
         data[4] = static_cast<uint8_t>(command);
-
-        data[size + 5] = crc(data + 3, 2 + size);
-
-        size += 6; // Final buffer size
         break;
     }
     case MspCommand::MSP_SET_MOTOR: [[fallthrough]];
     case MspCommand::MSP_SET_RAW_RC:
     {
-        data[0] = '$';
-        data[1] = 'M';
-        data[2] = '<'; // Because it is setting
-
-        size = 16; // 16 arguments * 2 bytes
+        size = 16; // 8 arguments * 2 bytes
         data[3] = size;
-
         data[4] = static_cast<uint8_t>(command);
 
         for (size_t i = 0; i < 8; i++)
@@ -73,28 +62,16 @@ bool MspParser::encode(uint8_t* data, size_t& size, MspCommand command, std::vec
             data[5 + i * 2] = value & 0xFF;
             data[6 + i * 2] = (value >> 8) & 0xFF;
         }
-
-        data[size + 5] = crc(data + 3, 2 + size);
-
-        size += 6; // Final buffer size
         break;
     }
     case MspCommand::MSP_SET_RECTANGLE_POS:
     {
-        data[0] = '$';
-        data[1] = 'M';
-        data[2] = '<';
-
         size = 2;
         data[3] = size;
 
         data[4] = static_cast<uint8_t>(command);
         data[5] = arguments[0];
         data[6] = arguments[1];
-
-        data[size + 5] = crc(data + 3, 2 + size);
-
-        size += 6; // Final buffer size
         break;
     }
     default:
@@ -104,6 +81,9 @@ bool MspParser::encode(uint8_t* data, size_t& size, MspCommand command, std::vec
     }
     }
 
+    data[size + 5] = crc(data + 3, 2 + size);
+    size += 6; // Final buffer size
+
     return true;
 }
 
@@ -111,26 +91,20 @@ bool MspParser::decode(uint8_t nextByte, MspCommand& command, std::vector<float>
 {
     // Shift internal buffer
     for (size_t i = 0; i < sizeof(m_internalBuffer) - 1; i++)
-    {
         m_internalBuffer[i] = m_internalBuffer[i + 1];
-    }
 
     // Add new byte to internal buffer
     m_internalBuffer[sizeof(m_internalBuffer) - 1] = nextByte;
 
     // Check if we have a valid attitude response
     if (m_internalBuffer[0] != '$' || m_internalBuffer[1] != 'M' || m_internalBuffer[2] != '>')
-    {
         return false;
-    }
 
     int size = m_internalBuffer[3];
     uint8_t crcReceived = m_internalBuffer[5 + size];
     uint8_t crcCalculated = crc(m_internalBuffer + 3, size + 2);
     if (crcReceived != crcCalculated)
-    {
         return false;
-    }
 
     switch (static_cast<MspCommand>(m_internalBuffer[4]))
     {
@@ -203,31 +177,23 @@ bool MspParser::decodeModes(uint8_t nextByte, MspModes& modes)
 {
     // Shift internal buffer
     for (size_t i = 0; i < sizeof(m_internalBufferModes) - 1; i++)
-    {
         m_internalBufferModes[i] = m_internalBufferModes[i + 1];
-    }
 
     // Add new byte to internal buffer
     m_internalBufferModes[sizeof(m_internalBufferModes) - 1] = nextByte;
 
     // Check if we have a valid attitude response
     if (m_internalBufferModes[0] != '$' || m_internalBufferModes[1] != 'M' || m_internalBufferModes[2] != '>')
-    {
         return false;
-    }
 
     int size = m_internalBufferModes[3];
     uint8_t crcReceived = m_internalBufferModes[5 + size];
     uint8_t crcCalculated = crc(m_internalBufferModes + 3, size + 2);
     if (crcReceived != crcCalculated)
-    {
         return false;
-    }
 
     if (static_cast<MspCommand>(m_internalBufferModes[4]) != MspCommand::MSP_MODE_RANGES)
-    {
         return false;
-    }
 
     // Modes are stored in the buffer from byte 5 to byte 5 + size
     // byte [0] = id
@@ -274,8 +240,6 @@ uint8_t MspParser::crc(uint8_t* data, size_t size)
 {
     uint8_t crc = 0;
     for (size_t i = 0; i < size; i++)
-    {
         crc ^= data[i];
-    }
     return crc;
 }

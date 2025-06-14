@@ -347,6 +347,12 @@ enum class MspCommand
      */
     MSP_MODE_RANGES = 34,
 
+    /**
+     * @brief Set the position of rectangle on OSD.
+     * @param posX X coordinate in grid.
+     * @param posY Y coordinate in grid.
+     * @remark THIS IS A CUSTOM COMMAND IT IS ONLY SUPPORTED BY CUSTOM BETAFLIGHT.
+     */
     MSP_SET_RECTANGLE_POS = 190
 };
 
@@ -473,18 +479,51 @@ class MspParser
 {
 public:
 
+    /**
+     * @brief Get the version of library.
+     * @return std::string version in format "MAJOR.MINOR.PATCH"
+     */
     static std::string getVersion();
 
+    /**
+     * @brief Encode msp command.
+     * @param data  Destination buffer to store encoded command.
+     * @param size Size of encoded command buffer.
+     * @param command Msp command to encode.
+     * @param arguments Arguments of command.
+     * @return True if command is encoded.
+     */
     bool encode(uint8_t* data, size_t& size, MspCommand command, std::vector<uint16_t> arguments = {});
 
+    /**
+     * @brief Decode msp command response.
+     * @param nextByte Next byte from response buffer.
+     * @param command Detected msp command.
+     * @param arguments Data returned by FC for related command.
+     * @return True if command is decoded.
+     */
     bool decode(uint8_t nextByte, MspCommand& command, std::vector<float>& arguments);
 
+    /**
+     * @brief Decode modes of FC.
+     * @param nextByte Next byte from response buffer.
+     * @param modes modes of fc.
+     * @return True if modes are decoded.
+     */
     bool decodeModes(uint8_t nextByte, MspModes& modes);
 
 private:
 
+    /// @brief Internal buffer for decoding response of FC.
     uint8_t m_internalBuffer[32]{0};
+    /// @brief Internal buffer for decoding modes response of FC.
     uint8_t m_internalBufferModes[160]{0};
 
+    /**
+     * @brief Calculate the crc of buffer.
+     * @param data Buffer for crc calculation.
+     * @param size Buffer size.
+     * @return Calculated crc value.
+     */
     uint8_t crc(uint8_t* data, size_t size);
 };
