@@ -52,6 +52,8 @@ bool MspParser::encode(uint8_t* data, size_t& size, MspCommand command, std::vec
     case MspCommand::MSP_SET_MOTOR: [[fallthrough]];
     case MspCommand::MSP_SET_RAW_RC:
     {
+        if (arguments.size() < 8)
+            return false;
         size = 16; // 8 arguments * 2 bytes
         data[3] = static_cast<uint8_t>(size);
         data[4] = static_cast<uint8_t>(command);
@@ -66,12 +68,16 @@ bool MspParser::encode(uint8_t* data, size_t& size, MspCommand command, std::vec
     }
     case MspCommand::MSP_SET_RECTANGLE_POS:
     {
-        size = 2;
+        if (arguments.size() < 4)
+            return false;
+        size = 4;
         data[3] = static_cast<uint8_t>(size);
 
         data[4] = static_cast<uint8_t>(command);
         data[5] = static_cast<uint8_t>(arguments[0]);
         data[6] = static_cast<uint8_t>(arguments[1]);
+        data[7] = static_cast<uint8_t>(arguments[2]);
+        data[8] = static_cast<uint8_t>(arguments[3]);
         break;
     }
     default:
